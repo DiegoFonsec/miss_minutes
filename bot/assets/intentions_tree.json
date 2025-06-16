@@ -1,0 +1,32 @@
+{
+    "intentions": [
+        {
+            "machine_name": "clear_cache",
+            "context": [
+                "Usuarios tienen un directorio de sitios webs a los que se puede borrar cache usando una API que se conecta directo a un servidor",
+                "Usuarios no ven los cambios en un ajuste de un sitio web y quieren refrescar la cache para que se reflejen",
+                "Usuarios mandan cambios a un repositorio web pero Imperia no deja mostrar los cambios"
+            ]
+        },
+        {
+            "machine_name": "some_one_was_late",
+            "context": [
+                "Se hizo una reunion de trafico y se informa que alguien llegó tarde"
+            ]
+        },
+        {
+            "machine_name": "presentation",
+            "context": [
+                "Alguien está presentando a <@U064852NAKE>",
+                "Introducción de <@U064852NAKE>",
+                "La gente trada de conocer a <@U064852NAKE>"
+            ]
+        },
+        {
+            "machine_name": "unknow_intention",
+            "context": [
+                "No es clara la intención del usuario"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/manage.py", line 22, in <module>
+    main()
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/venv/lib/python3.11/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/venv/lib/python3.11/site-packages/django/core/management/__init__.py", line 416, in execute
+    django.setup()
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/venv/lib/python3.11/site-packages/django/__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/venv/lib/python3.11/site-packages/django/apps/registry.py", line 124, in populate
+    app_config.ready()
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/bot/apps.py", line 9, in ready
+    from .slack_app import run_async
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/bot/slack_app.py", line 8, in <module>
+    from bot.bot_actions import generate_response
+  File "/Users/diegofonseca/Documents/abi-projects/miss_minutes_wt/bot/bot_actions.py", line 1, in <module>
+    import openai 
+    ^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'openai'
+nohup: python: No such file or directory
