@@ -48,8 +48,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "wagtail_dp_tools",
-    "wagtail_dp_tools.csrgenerator",
     "bot",
 ]
 
