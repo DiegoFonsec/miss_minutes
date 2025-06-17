@@ -1,0 +1,343 @@
+<!--templates/csrgenerator/admin/csrgenerator.html-->
+{% extends "wagtailadmin/base.html" %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+<div class="nice-padding">
+  <h1>🔐 {{ plugin.name }}</h1>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" style="margin-bottom: 20px; border-bottom: 2px solid #ddd;">
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link active" onclick="showTab('main'); return false;" style="font-weight: bold;">CSR Generator</a>
+    </li>
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('history'); return false;">Recent history</a>
+    </li>
+    <li class="nav-item" style="display:inline;margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('configuration'); return false;">Configuration</a>
+    </li>
+    <li class="nav-item" style="display:inline;margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('readme'); return false;">Readme.md</a>
+    </li>
+    <li class="nav-item" style="display:inline;margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('about'); return false;">About</a>
+    </li>
+  </ul>
+
+  <!-- Main Functionality Tab -->
+  <div id="tab-main">
+    <form method="post" id="modeSelector">
+      {% csrf_token %}
+      <label><input type="radio" name="mode" value="generate" {% if not form_data.mode or form_data.mode == 'generate' %}checked{% endif %} onchange="this.form.submit()"> Generate CSR</label>
+      <label style="margin-left: 20px;"><input type="radio" name="mode" value="verify" {% if form_data.mode == 'verify' %}checked{% endif %} onchange="this.form.submit()"> Verify CSR</label>
+    </form>
+    <hr>
+
+    {% if form_data.mode == "verify" %}
+      <h2>🔍 Verify CSR</h2>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="verify">
+        <textarea name="csr_text" rows="8" style="width:100%;margin-bottom: 5px;" placeholder="Paste content .csr " required>{{ form_data.csr_text }}</textarea>
+        <button type="submit" class="button">Verify CSR</button>
+      </form>
+
+      {% if verification_output %}
+        <h3>Result:</h3>
+        <pre style="padding: 10px; border: 1px dashed #ddd;">{{ verification_output }}</pre>
+      {% endif %}
+
+    {% else %}
+    <form method="post" action="{% url 'csrgenerator_admin' %}" id="csrForm">
+      {% csrf_token %}
+      <h2>✨ Generate CSR and SAN.CNF</h2>
+  
+      <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+          <div style="flex: 1 1 90%;">
+              <label>Project name:</label>
+              <input type="text" name="project_name" value="MyProject" required>
+              <p class="help">Name that will identify the containing folder.</p>
+          </div>
+  
+          <div style="flex: 1 1 45%;">
+              <label>Country:</label>
+              <input type="text" name="country" value="CO" maxlength="2" required>
+              <p class="help">Country code in ISO format, e.g., CO for Colombia.</p>
+  
+              <label>State/Province:</label>
+              <input type="text" name="state" value="Cundinamarca" required>
+              <p class="help">State, province, or region where the organization is located.</p>
+  
+              <label>Locality:</label>
+              <input type="text" name="locality" value="Bogota" required>
+              <p class="help">City or locality where the organization requesting the certificate is located.</p>
+  
+              <label>Organization:</label>
+              <input type="text" name="org_name" value="Anheuser-Bush InBev SA" required>
+              <p class="help">Organization name.</p>
+          </div>
+  
+          <div style="flex: 1 1 45%;">
+              <label>Organizational Unit:</label>
+              <input type="text" name="org_unit" value="Digital Productz MAZ" required>
+              <p class="help">Department or unit within the organization (e.g., Digital Productz MAZ).</p>
+  
+              <label>Primary domain (Common Name):</label>
+              <input type="text" name="common_name" value="mydomain.com" required>
+              <p class="help">Main domain for the certificate (e.g., mydomain.com).</p>
+  
+              <label>Alternative domains (comma-separated):</label>
+              <input type="text" name="alt_dns" value="www.mydomain.com,test.mydomain.com">
+              <p class="help">Enter domains separated by commas (e.g., www.mydomain.com, app.mydomain.com).</p>
+          </div>
+      </div>
+  
+      <div style="flex: 1 1 45%; margin-top: 20px;">
+          <label>
+              <input type="checkbox" name="use_ips" id="use_ips" onclick="toggleIPInput()"> Add IPs
+              <p class="help">Check this box if you want to include IP addresses as SAN.</p>
+          </label>
+          <div id="ip_input_div" style="display: none;">
+              <input type="text" name="alt_ips" placeholder="192.168.1.1">
+              <p class="help">Enter IPs separated by commas (e.g., 192.168.0.1, 192.168.0.2).</p>
+          </div>
+      </div>
+  
+      <details style="margin: 20px 0px 20px 0px;">
+          <summary style="cursor: pointer; text-decoration: underline;">↕️ <u>Advanced configuration (optional)</u></summary>
+          <div style="margin-top: 10px;">
+              <label>Prompt:</label>
+              <select name="prompt" required>
+                  <option value="no" {% if form_data.prompt == "no" or not form_data.prompt %}selected{% endif %}>No</option>
+                  <option value="yes" {% if form_data.prompt == "yes" %}selected{% endif %}>Yes</option>
+              </select>
+              <p class="help">Request fields interactively?</p>
+  
+              <label>Default bits:</label>
+              <input type="number" name="default_bits" value="{{ form_data.default_bits|default:"2048" }}" min="512" required>
+              <p class="help">Size of the RSA private key.</p>
+  
+              <label>DN section name:</label>
+              <input type="text" name="distinguished_name" value="{{ form_data.distinguished_name|default:"req_distinguished_name" }}" required>
+              <p class="help">Identifier for the DN section.</p>
+  
+              <label>Extensions section name:</label>
+              <input type="text" name="req_extensions" value="{{ form_data.req_extensions|default:"req_ext" }}" required>
+              <p class="help">Identifier for the extensions section.</p>
+          </div>
+      </details>
+  
+      <button type="submit" class="button button-primary">Preview</button>
+  </form>
+  
+
+      {% if preview %}
+        <h3>Summary before generating:</h3>
+        <ul>
+          <li><strong>Project:</strong> {{ form_data.project_name }}</li>
+          <li><strong>Country:</strong> {{ form_data.country }}</li>
+          <li><strong>State:</strong> {{ form_data.state }}</li>
+          <li><strong>Locality:</strong> {{ form_data.locality }}</li>
+          <li><strong>Organization name:</strong> {{ form_data.org_name }}</li>
+          <li><strong>Organizational unit:</strong> {{ form_data.org_unit }}</li>
+          <li><strong>Primary domain (Common Name):</strong> {{ form_data.common_name }}</li>
+          {% if form_data.email %}<li><strong>Email:</strong> {{ form_data.email }}</li>{% endif %}
+          <li><strong>Alternative domains:</strong> {{ dns_list|join:", " }}</li>
+          {% if ip_list %}<li><strong>Alternative IPs:</strong> {{ ip_list|join:", " }}</li>{% endif %}
+        </ul>
+
+        <h4>preview to <code>san.cnf</code>:</h4>
+        <pre style="padding: 10px; border: 1px dashed #ddd;">
+[ req ]
+default_bits = {{ form_data.default_bits }}
+prompt = {{ form_data.prompt }}
+distinguished_name = {{ form_data.distinguished_name }}
+req_extensions = {{ form_data.req_extensions }}
+
+[ req_distinguished_name ]
+countryName = {{ form_data.country }}
+stateOrProvinceName = {{ form_data.state }}
+localityName = {{ form_data.locality }}
+organizationName = {{ form_data.org_name }}
+organizationalUnitName = {{ form_data.org_unit }}
+commonName = {{ form_data.common_name }}
+{% if form_data.email %}emailAddress = {{ form_data.email }}{% endif %}
+
+[ alt_names ]
+{% for dns in dns_list %}DNS.{{ forloop.counter }} = {{ dns }}
+{% endfor %}
+{% for ip in ip_list %}IP.{{ forloop.counter }} = {{ ip }}
+{% endfor %}
+        </pre>
+
+        <form method="post" action="">
+          {% csrf_token %}
+          {% for key, value in form_data.items %}
+            <input type="hidden" name="{{ key }}" value="{{ value|escape }}">
+          {% endfor %}
+          <input type="hidden" name="confirm" value="yes">
+          <button type="submit" class="button button-primary">🔐 Generar ZIP</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- History Tab -->
+  <div id="tab-history" style="display: none;">
+
+    {% if export_message %}
+      <div style="padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; margin-bottom: 10px; border-radius: 4px;">
+        {{ export_message }}
+      </div>
+    {% endif %}
+
+    {% if history_list %}
+      <h2>📜 Search CSR</h2>
+
+      <form method="get" action="" style="margin-bottom: 20px;">
+        <input type="hidden" name="tab" value="history">
+        <div style="display: flex; align-items: center;">
+          <input type="text" name="search" placeholder="Buscar por proyecto" value="{{ request.GET.search }}" 
+            style="flex: 1; padding: 5px; height: 38px; border: 1px solid #ccc; border-right: 0; border-radius: 4px 0 0 4px;" autocomplete="off">
+          <button type="submit" class="button" style="height: 38px; border-radius: 0;">Search</button>
+          {% if request.GET.search %}
+            <a href="{% url 'csrgenerator_admin' %}?tab=history" class="button" style="height: 38px; border-radius: 0 4px 4px 0;">Clean</a>
+          {% endif %}
+          
+        </div>
+      </form>
+
+      <form method="post" action="">
+        <button type="submit" name="export_csv" value="1" class="button" style="margin-left: auto;">Export CSV</button>
+
+        {% csrf_token %}
+        <button type="submit" name="delete_selected" class="button secondary">Delete Select</button>
+        <br><br>
+
+        <table class="listing full-width">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all" onclick="toggleAll(this);"></th>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Common Domain</th>
+              <th>DNS SAN</th>
+              <th>IP SAN</th>
+              <th>User</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in history_list %}
+              <tr>
+                <td><input type="checkbox" name="selected_ids" value="{{ item.id }}"></td>
+                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ item.project_name }}</td>
+                <td>{{ item.common_name }}</td>
+                <td>{{ item.dns_san }}</td>
+                <td>{{ item.ip_san|default:"—" }}</td>
+                <td>
+                  {% if item.user %}
+                    {{ item.user.get_full_name|default:item.user.username }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="download_from_history" value="{{ item.id }}">
+                    <button type="submit" class="button button-small">📥 Generate ZIP</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if history_list.has_other_pages %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if history_list.has_previous %}
+                    <a href="?page=1&tab=history{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">« primera</a>
+                    <a href="?page={{ history_list.previous_page_number }}&tab=history{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">‹ anterior</a>
+                {% endif %}
+        
+                <span class="current">
+                    Página {{ history_list.number }} de {{ history_list.paginator.num_pages }}
+                </span>
+        
+                {% if history_list.has_next %}
+                    <a href="?page={{ history_list.next_page_number }}&tab=history{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">siguiente ›</a>
+                    <a href="?page={{ history_list.paginator.num_pages }}&tab=history{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">última »</a>
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+        
+      </form>
+    {% else %}
+      - ⚠ No CSR -
+    {% endif %}
+  </div>
+  
+  
+  <!-- Configuration Tab -->
+  <div id="tab-configuration" style="display: none;">
+    - ⚠ No Configuration -
+  </div>
+
+  <!-- Read.me Tab -->
+  <div id="tab-readme" style="display: none;">
+    {{ readme_html|default:"<em>- ⚠ README.md not found. -</em>"|safe }}
+  </div>
+
+   <!-- About Tab -->
+  <div id="tab-about" style="display: none;">
+    <p><strong>Nombre:</strong> {{ plugin.name }}</p>
+    <p><strong>Descripción:</strong> {{ plugin.description }}</p>
+    <p><strong>Versión:</strong> {{ plugin.version }}</p>
+    <p><strong>Autor:</strong> {{ plugin.author }} ({{ plugin.email }})</p>
+    <p><strong>Departamento:</strong> {{ plugin.department }}</p>
+  </div>
+
+</div>
+<!-- Scripts -->
+<script>
+  function showTab(tab) {
+      document.getElementById('tab-main').style.display = (tab === 'main') ? 'block' : 'none';
+      document.getElementById('tab-about').style.display = (tab === 'about') ? 'block' : 'none';
+      document.getElementById('tab-configuration').style.display = (tab === 'configuration') ? 'block' : 'none';
+      document.getElementById('tab-readme').style.display = (tab === 'readme') ? 'block' : 'none';
+      document.getElementById('tab-history').style.display = (tab === 'history') ? 'block' : 'none';
+
+      const links = document.querySelectorAll('.tab-link');
+      links.forEach(link => link.classList.remove('active'));
+      if (tab === 'main') links[0].classList.add('active');
+      else if (tab === 'history') links[1].classList.add('active');
+      else if (tab === 'configuration') links[2].classList.add('active');
+      else if (tab === 'readme') links[3].classList.add('active');
+      else if (tab === 'about') links[4].classList.add('active');
+  }
+
+  window.onload = function() {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) {
+          showTab(tab);
+      }
+  };
+
+  function toggleIPInput() {
+    document.getElementById('ip_input_div').style.display = document.getElementById('use_ips').checked ? 'block' : 'none';
+  }
+
+  function toggleAll(source) {
+    checkboxes = document.getElementsByName('selected_ids');
+    for (var i = 0; i < checkboxes.length; i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
+</script>
+{% endblock %}

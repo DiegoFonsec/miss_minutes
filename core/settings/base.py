@@ -12,11 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from dotenv import load_dotenv
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
-load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
@@ -48,7 +46,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "bot",
+    "wagtail_dp_tools",
+    "wagtail_dp_tools.slack",
+    "wagtail_dp_tools.csrgenerator",
 ]
 
 MIDDLEWARE = [
