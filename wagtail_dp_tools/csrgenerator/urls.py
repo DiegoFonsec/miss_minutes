@@ -8,4 +8,5 @@ urlpatterns = [
     path('', csrgenerator_admin_view, name='csrgenerator_admin'),
     # api
     path('api/', include('wagtail_dp_tools.csrgenerator.api.urls')),
+    path('slack/', include('wagtail_dp_tools.slack.urls')),
 ]

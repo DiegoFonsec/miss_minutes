@@ -24,3 +24,11 @@ class Strike(models.Model):
 
     def __str__(self):
         return f'Strike: {self.user} at {self.time}'
+
+class SlackConfiguration(models.Model):
+    bot_token = models.CharField(max_length=255, help_text="Token del bot de Slack")
+    ia_token = models.CharField(max_length=255, help_text="Token para el modelo de IA")
+    bot_status = models.BooleanField(default=True, help_text="Estado del bot (encendido o apagado)")
+
+    def __str__(self):
+        return f"Slack Configuration: {'Active' if self.bot_status else 'Inactive'}"

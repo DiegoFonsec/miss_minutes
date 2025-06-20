@@ -12,8 +12,8 @@ def register_dp_tools_menu():
         ),
         MenuItem(
             'Slack',
-            reverse('show_text'),
-            icon_name='chat'
+            reverse('slack_admin'),
+            icon_name='desktop'
         ),
     ])
 

@@ -1,0 +1,110 @@
+{% extends "wagtailadmin/base.html" %}
+
+{% block content %}
+<div class="nice-padding">
+  <h1>🔐 {{ plugin.name }}</h1>
+
+  <!-- Pestañas de navegación -->
+  <ul class="nav nav-tabs" style="margin-bottom: 20px; border-bottom: 2px solid #ddd;">
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link active" onclick="showTab('main'); return false;" style="font-weight: bold;">Configuration</a>
+    </li>
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('history'); return false;">Recent history</a>
+    </li>
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('configuration'); return false;">Configuration</a>
+    </li>
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('readme'); return false;">Readme.md</a>
+    </li>
+    <li class="nav-item" style="display:inline; margin: 5px;">
+      <a href="#" class="tab-link" onclick="showTab('about'); return false;">About</a>
+    </li>
+  </ul>
+
+  <!-- Sección de Funcionalidad Principal (Configuration Tab) -->
+  <div id="tab-main">
+    <h2>✨ Slack Bot Configuration</h2>
+    <form method="post">
+      {% csrf_token %}
+      <!-- Contenido del formulario aquí -->
+      <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1 1 90%;">
+          <label for="botSwitch">Bot Switch:</label>
+          <input type="checkbox" name="bot_status" id="botSwitch">
+          <p class="help">You can switch on or off the bot</p>
+        </div>
+      </div>
+
+      <!-- Agregar los inputs para los tokens -->
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px;">
+          <div style="flex: 1 1 45%;">
+              <label for="ia_token">Model IA Token:</label>
+              <input type="text" name="ia_token" id="ia_token" class="form-control" placeholder="xapp-..." required>
+              <p class="help">Provide the token for your IA model.</p>
+          </div>
+
+          <div style="flex: 1 1 45%;">
+              <label for="slack_token">Slack Bot Token:</label>
+              <input type="text" name="slack_token" id="slack_token" class="form-control" placeholder="xoxb-..." required>
+              <p class="help">Provide the token for your Slack Bot.</p>
+          </div>
+      </div>
+
+      <button type="submit" class="button">Guardar</button>
+    </form>
+  </div>
+
+  <!-- Otros Tabs como 'History', 'Readme', etc. -->
+  <div id="tab-history" style="display: none;">
+    <p>Recent activity or history will be shown here.</p>
+  </div>
+
+  <div id="tab-configuration" style="display: none;">
+    <p>Configuration settings for Slack bot will be shown here.</p>
+  </div>
+
+  <div id="tab-readme" style="display: none;">
+    <p>Readme content will be displayed here.</p>
+  </div>
+
+  <div id="tab-about" style="display: none;">
+    <p><strong>Nombre:</strong> {{ plugin.name }}</p>
+    <p><strong>Descripción:</strong> {{ plugin.description }}</p>
+    <p><strong>Versión:</strong> {{ plugin.version }}</p>
+    <p><strong>Autor:</strong> {{ plugin.author }} ({{ plugin.email }})</p>
+    <p><strong>Departamento:</strong> {{ plugin.department }}</p>
+  </div>
+
+</div>
+
+<!-- Scripts para gestionar las pestañas -->
+<script>
+  function showTab(tab) {
+      document.getElementById('tab-main').style.display = (tab === 'main') ? 'block' : 'none';
+      document.getElementById('tab-history').style.display = (tab === 'history') ? 'block' : 'none';
+      document.getElementById('tab-configuration').style.display = (tab === 'configuration') ? 'block' : 'none';
+      document.getElementById('tab-readme').style.display = (tab === 'readme') ? 'block' : 'none';
+      document.getElementById('tab-about').style.display = (tab === 'about') ? 'block' : 'none';
+
+      // Cambiar el estado activo de las pestañas
+      const links = document.querySelectorAll('.tab-link');
+      links.forEach(link => link.classList.remove('active'));
+      if (tab === 'main') links[0].classList.add('active');
+      else if (tab === 'history') links[1].classList.add('active');
+      else if (tab === 'configuration') links[2].classList.add('active');
+      else if (tab === 'readme') links[3].classList.add('active');
+      else if (tab === 'about') links[4].classList.add('active');
+  }
+
+  window.onload = function() {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) {
+          showTab(tab);
+      }
+  };
+</script>
+
+{% endblock %}

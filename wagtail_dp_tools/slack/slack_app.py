@@ -3,7 +3,6 @@ import threading
 from slack_bolt.app import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from django.conf import settings
-import importlib
 from django.apps import apps
 from wagtail_dp_tools.slack.slack_actions import generate_response, getUser, validate_authorization
 
